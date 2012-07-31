@@ -20,7 +20,7 @@
         <activity android:name="SensorCalSettings" android:label="@string/sensor_cal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <action android:name="com.android.settings.MANUFACTURER_APPLICATION_SETTING" />
+                <action android:name="com.intel.settings.SENSOR_CALIBRATION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_settings_sensor_calibration"/>
