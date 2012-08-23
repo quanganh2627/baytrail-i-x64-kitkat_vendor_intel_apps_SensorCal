@@ -27,7 +27,7 @@
             <meta-data android:name="com.android.settings.title" android:resource="@string/sensor_cal"/>
         </activity>
 
-        <activity android:name="GyroscopeCal" android:configChanges="orientation|screenSize" android:label="@string/gyroscope_cal">
+        <activity android:name="GyroscopeCal" android:label="@string/gyroscope_cal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.settings.GYROSCOPE_CAL" />
