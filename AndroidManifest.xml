@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="CompassCal" android:label="@string/compass_cal">
+        <activity android:name="CompassCal" android:configChanges="orientation|screenSize" android:label="@string/compass_cal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.settings.COMPASS_CAL" />
