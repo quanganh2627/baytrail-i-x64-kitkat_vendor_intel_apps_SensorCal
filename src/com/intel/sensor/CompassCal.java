@@ -69,7 +69,8 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     private void setupLayout() {
         setContentView(R.layout.compass_cal);
         calButton = (Button)this.findViewById(R.id.calibration_button);
-        calButton.setOnClickListener(this);
+        if (calButton != null)
+            calButton.setOnClickListener(this);
     }
 
     @Override
