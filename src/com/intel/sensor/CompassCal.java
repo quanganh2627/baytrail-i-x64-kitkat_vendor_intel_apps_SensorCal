@@ -45,6 +45,7 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     private Boolean inCalibration;
     private int delay = SensorManager.SENSOR_DELAY_FASTEST;
     private boolean isTablet = false;
+    private int originalOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -93,6 +94,7 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     {
         final int orientation = getResources().getConfiguration().orientation;
         final int rotation = getWindowManager().getDefaultDisplay().getOrientation();
+        originalOrientation = getRequestedOrientation();
 
         if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_90) {
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -150,7 +152,7 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
             inCalibration = false;
             calButton.setEnabled(true);
 
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+            setRequestedOrientation(originalOrientation);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setPositiveButton(R.string.compass_cal_alert_ok_btn, null);
 
