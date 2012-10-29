@@ -50,7 +50,6 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        setupLayout();
 
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         inCalibration = false;
@@ -59,6 +58,7 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
         isTablet = boardType.equals("tablet");
 
         delay = SensorManager.SENSOR_DELAY_FASTEST;
+        setupLayout();
     }
 
     @Override
@@ -70,8 +70,10 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     private void setupLayout() {
         setContentView(R.layout.compass_cal);
         calButton = (Button)this.findViewById(R.id.calibration_button);
-        if (calButton != null)
+        if (calButton != null) {
             calButton.setOnClickListener(this);
+            calButton.setEnabled(!inCalibration);
+        }
     }
 
     @Override
