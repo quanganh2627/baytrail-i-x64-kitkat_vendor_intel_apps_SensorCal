@@ -39,6 +39,8 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
     private float data[][];
     private int dataCount;
     private Boolean inCalibration;
+    private SensorCalibration gyroCal;
+    private int handle;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -52,8 +54,14 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
 
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
 
-        data = new float[DATA_COUNT][3];
-        dataCount = 0;
+        if (SensorCalibration.PSH_SUPPORT) {
+            gyroCal = new SensorCalibration();
+        }
+        else
+        {
+            data = new float[DATA_COUNT][3];
+            dataCount = 0;
+        }
         inCalibration = false;
     }
 
@@ -77,18 +85,25 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
         switch (v.getId()) {
         case R.id.calibration_button:
             calButton.setEnabled(false);
-            inCalibration = true;
 
-            try {
-                FileWriter fw = new FileWriter("/data/gyro.conf");
-                String s = "0 0 0\n";
-                fw.write(s);
-                fw.flush();
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (SensorCalibration.PSH_SUPPORT) {
+                handle = gyroCal.CalibrationOpen(2);
+                gyroCal.CalibrationStart(handle);
+            }
+            else
+            {
+                try {
+                    FileWriter fw = new FileWriter("/data/gyro.conf");
+                    String s = "0 0 0\n";
+                    fw.write(s);
+                    fw.flush();
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
+            inCalibration = true;
             gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
@@ -98,7 +113,18 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
         case Sensor.TYPE_GYROSCOPE:
-            collectData(event);
+            if (SensorCalibration.PSH_SUPPORT) {
+                if (gyroCal.CalibrationFinishCheck(handle) == 1) {
+                    sensorManager.unregisterListener(this, gyroSensor);
+                    inCalibration = false;
+                    calButton.setEnabled(true);
+                    gyroCal.CalibrationClose(handle);
+                    showResultDialog(true);
+                }
+            }
+            else
+                collectData(event);
+
             break;
         }
     }

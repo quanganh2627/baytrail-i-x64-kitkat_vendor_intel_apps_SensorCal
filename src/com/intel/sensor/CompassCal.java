@@ -46,6 +46,8 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     private int delay = SensorManager.SENSOR_DELAY_FASTEST;
     private boolean isTablet = false;
     private int originalOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
+    private SensorCalibration compassCal;
+    private int handle;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -56,6 +58,9 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
 
         String boardType = getString(R.string.board_type);
         isTablet = boardType.equals("tablet");
+
+        if (SensorCalibration.PSH_SUPPORT)
+            compassCal = new SensorCalibration();
 
         delay = SensorManager.SENSOR_DELAY_FASTEST;
         setupLayout();
@@ -124,43 +129,65 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     public void onClick(View v) {
         switch (v.getId()) {
         case R.id.calibration_button:
-            try {
-                FileWriter fw = new FileWriter("/data/compass.conf");
-                String s = "0 0 0 0 0 0 0\n";
-                fw.write(s);
-                fw.flush();
-                fw.close();
+            lockOrientation();
+            calButton.setEnabled(false);
 
-                lockOrientation();
-                calButton.setEnabled(false);
-                inCalibration = true;
-                compassSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-                sensorManager.registerListener(this, compassSensor, delay);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (SensorCalibration.PSH_SUPPORT) {
+                handle = compassCal.CalibrationOpen(1);
+                compassCal.CalibrationStart(handle);
             }
+            else
+            {
+                try {
+                    FileWriter fw = new FileWriter("/data/compass.conf");
+                    String s = "0 0 0 0 0 0 0\n";
+                    fw.write(s);
+                    fw.flush();
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            inCalibration = true;
+            compassSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            sensorManager.registerListener(this, compassSensor, delay);
 
             break;
         }
     }
 
     public void onSensorChanged(SensorEvent event) {
+        if (SensorCalibration.PSH_SUPPORT) {
+            switch (event.sensor.getType()) {
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    if (compassCal.CalibrationFinishCheck(handle) == 1) {
+                        compassCal.CalibrationClose(handle);
 
+                        onCalibrationFinished();
+                 }
+                 break;
+            }
+        }
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        if (accuracy == SensorManager.SENSOR_STATUS_ACCURACY_HIGH) {
-            sensorManager.unregisterListener(this, compassSensor);
-            inCalibration = false;
-            calButton.setEnabled(true);
+        if (!SensorCalibration.PSH_SUPPORT)
+            if (accuracy == SensorManager.SENSOR_STATUS_ACCURACY_HIGH)
+                onCalibrationFinished();
+    }
 
-            setRequestedOrientation(originalOrientation);
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setPositiveButton(R.string.compass_cal_alert_ok_btn, null);
+    public void onCalibrationFinished() {
+        sensorManager.unregisterListener(this, compassSensor);
+        inCalibration = false;
+        calButton.setEnabled(true);
 
-            builder.setTitle(R.string.compass_cal_alert_title);
-            builder.setMessage(R.string.compass_cal_alert_success);
-            builder.show();
-        }
+        setRequestedOrientation(originalOrientation);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setPositiveButton(R.string.compass_cal_alert_ok_btn, null);
+
+        builder.setTitle(R.string.compass_cal_alert_title);
+        builder.setMessage(R.string.compass_cal_alert_success);
+        builder.show();
     }
 }
