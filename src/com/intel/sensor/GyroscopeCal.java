@@ -49,8 +49,8 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
         setContentView(R.layout.gyroscope_cal);
 
         calButton = (Button)this.findViewById(R.id.calibration_button);
-        calButton.setOnClickListener(this);
-
+        if(calButton != null)
+            calButton.setOnClickListener(this);
 
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
 
@@ -92,12 +92,19 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
             }
             else
             {
+                FileWriter fw = null;
                 try {
-                    FileWriter fw = new FileWriter("/data/gyro.conf");
+                    fw = new FileWriter("/data/gyro.conf");
                     String s = "0 0 0\n";
                     fw.write(s);
                     fw.flush();
-                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    if (fw != null)
+                        fw.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -161,17 +168,28 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
         y /= DATA_COUNT;
         z /= DATA_COUNT;
 
+        FileWriter fw = null;
+        boolean success = false;
         try {
-            FileWriter fw = new FileWriter("/data/gyro.conf");
+            fw = new FileWriter("/data/gyro.conf");
             String s = Float.toString(x) + " " + Float.toString(y) + " " + Float.toString(z) + "\n";
             fw.write(s);
             fw.flush();
-            fw.close();
-            showResultDialog(true);
+            success = true;
         } catch (IOException e) {
             e.printStackTrace();
-            showResultDialog(false);
+            success = false;
         }
+
+        try {
+            if (fw != null)
+                fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            success = false;
+        }
+
+        showResultDialog(success);
     }
 
     private void showResultDialog(boolean success) {

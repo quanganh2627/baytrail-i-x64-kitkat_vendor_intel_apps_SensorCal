@@ -138,12 +138,19 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
             }
             else
             {
+                FileWriter fw = null;
                 try {
-                    FileWriter fw = new FileWriter("/data/compass.conf");
+                    fw = new FileWriter("/data/compass.conf");
                     String s = "0 0 0 0 0 0 0\n";
                     fw.write(s);
                     fw.flush();
-                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    if (fw != null)
+                        fw.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
