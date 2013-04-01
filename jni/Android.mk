@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 
 # Build jni lib if necessary
-ifeq ($(TARGET_BOARD_PLATFORM),merrifield)
+ifeq ($(ENABLE_SENSOR_HUB),true)
 
 include $(CLEAR_VARS)
 

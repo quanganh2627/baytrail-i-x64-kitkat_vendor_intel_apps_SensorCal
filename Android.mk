@@ -9,7 +9,7 @@ LOCAL_SRC_FILES := src/com/intel/sensor/SensorCalSettings.java \
                    src/com/intel/sensor/CompassCal.java \
                    src/com/intel/sensor/GyroscopeCal.java
 
-ifeq ($(TARGET_BOARD_PLATFORM),merrifield)
+ifeq ($(ENABLE_SENSOR_HUB),true)
 LOCAL_SRC_FILES += src/com/intel/sensor/psh_cal/SensorCalibration.java
 
 LOCAL_JNI_SHARED_LIBRARIES := libPSHSensorCal_JNI
