@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <android/log.h>
 
-#include "libsensorhub/libsensorhub.h"
+#include <libsensorhub.h>
 
 #undef LOG_TAG
 #define LOG_TAG    "JNI_sensorcal"
