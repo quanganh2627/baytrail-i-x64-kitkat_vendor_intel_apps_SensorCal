@@ -16,12 +16,22 @@
 #define JNIREG_CLASS "com/intel/sensor/SensorCalibration"
 
 /* sensor_type :
- * 1. compass calibration
- * 2. gyro calibration
+ * 0. compass calibration
+ * 1. gyro calibration
  * ......
  */
-#define COMPASS_CAL	1
-#define GYRO_CAL	2
+enum {
+	COMPASS_CAL,
+	GYRO_CAL,
+	SENSOR_CAL_MAX,
+};
+
+struct calibration_param {
+	handle_t handle;
+	struct cmd_calibration_param param;
+};
+
+static struct calibration_param cal_param[SENSOR_CAL_MAX];
 
 /* This JNI function will open a sensor calibration.
  * return a sensor calibration handle for open success,
@@ -55,6 +65,10 @@ JNIEXPORT jint JNICALL psh_calibration_open(JNIEnv *env,
 		return 0;
 	}
 
+	cal_param[sensor_type].handle = cal;
+	memset((void*)&cal_param[sensor_type].param, 0,
+				sizeof(struct cmd_calibration_param));
+
 	return (int)cal;
 }
 
@@ -68,6 +82,8 @@ JNIEXPORT jint JNICALL psh_calibration_start(JNIEnv *env,
 	int ret;
 	struct cmd_calibration_param param;
 	handle_t cal = (handle_t)handle;
+
+	LOGI("PSH_S_C: Start calibration");
 
 	if (cal == NULL) {
 		LOGE("PSH_S_C: illegal sensor handle");
@@ -84,16 +100,20 @@ JNIEXPORT jint JNICALL psh_calibration_start(JNIEnv *env,
 	return 1;
 }
 
-/* This JNI function check if calibration is finished
- * Return 1 for finished, 0 for not yet
+/* This JNI function get the calibration result
+ * Return 0xff for finished, 0 for not yet,
+ * other for calibration result.
  */
-JNIEXPORT jint JNICALL psh_calibration_finish_check(JNIEnv *env,
+JNIEXPORT jint JNICALL psh_calibration_get(JNIEnv *env,
 						jobject jobj,
 						jint handle)
 {
 	int ret;
+	unsigned int result;
 	struct cmd_calibration_param param;
 	handle_t cal = (handle_t)handle;
+
+	LOGI("PSH_S_C: Get calibration");
 
 	if (cal == NULL) {
 		LOGE("PSH_S_C: illegal sensor handle");
@@ -108,27 +128,111 @@ JNIEXPORT jint JNICALL psh_calibration_finish_check(JNIEnv *env,
 		return 0;
 	}
 
-	if (param.calibrated) {
-		LOGI("PSH_S_C: Finish calibration");
-		return 1;
-	} else
-		return 0;
+	LOGI("PSH_S_C: Get calibration result");
+
+	result = param.calibrated;
+
+	if (result != SUBCMD_CALIBRATION_FALSE) {
+		int i;
+
+		for (i = 0; i < SENSOR_CAL_MAX; i++) {
+			if (cal_param[i].handle == cal) {
+				if ((cal_param[i].param.calibrated == SUBCMD_CALIBRATION_FALSE) ||
+					(cal_param[i].param.calibrated > result) ||
+					(result == SUBCMD_CALIBRATION_TRUE)) {
+					cal_param[i].param = param;
+				}
+
+				break;
+			}
+		}
+	}
+
+	return result;
 }
 
-JNIEXPORT void JNICALL psh_calibration_close(JNIEnv *env,
+/* This JNI function set calibration param
+ * Return 1 for set successfully, 0 for failed
+ */
+JNIEXPORT jint JNICALL psh_calibration_set(JNIEnv *env,
 						jobject jobj,
 						jint handle)
 {
 	struct cmd_calibration_param param;
 	handle_t cal = (handle_t)handle;
+	int ret = 0, i;
+
+	LOGI("PSH_S_C: Set calibration");
 
 	if (cal == NULL) {
 		LOGE("PSH_S_C: illegal sensor handle");
-		return;
+		return ret;
+	}
+
+	for (i = 0; i < SENSOR_CAL_MAX; i++) {
+		if (cal_param[i].handle == cal) {
+                        if (cal_param[i].param.calibrated == 0) {
+				LOGE("PSH_S_C: No valid param to set");
+				ret = 0;
+				break;
+                        }
+
+			param = cal_param[i].param;
+			param.sub_cmd = SUBCMD_CALIBRATION_SET;
+			param.calibrated = SUBCMD_CALIBRATION_TRUE;
+
+			ret = psh_set_calibration(cal, &param);
+			if (ret != 0) {
+				LOGE("PSH_S_C: Set calibration failed, ret is %d", ret);
+				ret = 0;
+			} else {
+				LOGI("PSH_S_C: Set calibration successful");
+				ret = 1;
+			}
+
+			break;
+		}
+	}
+
+	return ret;
+}
+
+/* This JNI function stop calibration
+ * Return 1 for set successfully, 0 for failed
+ */
+JNIEXPORT jint JNICALL psh_calibration_stop(JNIEnv *env,
+						jobject jobj,
+						jint handle)
+{
+	struct cmd_calibration_param param;
+	handle_t cal = (handle_t)handle;
+	int ret;
+
+	LOGI("PSH_S_C: Stop calibration");
+
+	if (cal == NULL) {
+		LOGE("PSH_S_C: illegal sensor handle");
+		return 0;
 	}
 
 	param.sub_cmd = SUBCMD_CALIBRATION_STOP;
-	psh_set_calibration(cal, &param);
+	ret = psh_set_calibration(cal, &param);
+	if (ret != 0) {
+		LOGE("PSH_S_C: Stop calibration failed, ret is %d", ret);
+		return 0;
+	}
+
+	return 1;
+}
+
+
+JNIEXPORT void JNICALL psh_calibration_close(JNIEnv *env,
+						jobject jobj,
+						jint handle)
+{
+	handle_t cal = (handle_t)handle;
+
+	LOGI("PSH_S_C: Close calibration");
 
 	psh_close_session(cal);
 }
@@ -136,7 +240,9 @@ JNIEXPORT void JNICALL psh_calibration_close(JNIEnv *env,
 static JNINativeMethod gMethods[] = {
 	{"CalibrationOpen", "(I)I", (void*)psh_calibration_open},
 	{"CalibrationStart", "(I)I", (void*)psh_calibration_start},
-	{"CalibrationFinishCheck", "(I)I", (void*)psh_calibration_finish_check},
+	{"CalibrationGet", "(I)I", (void*)psh_calibration_get},
+	{"CalibrationSet", "(I)I", (void*)psh_calibration_set},
+	{"CalibrationStop", "(I)I", (void*)psh_calibration_stop},
 	{"CalibrationClose", "(I)V", (void*)psh_calibration_close},
 };
 

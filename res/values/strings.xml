@@ -29,6 +29,7 @@
     <string name="compass_cal_alert_title">Result</string>
     <string name="compass_cal_alert_ok_btn">OK</string>
     <string name="compass_cal_alert_success">Calibration Succeeded!</string>
+    <string name="result_text">Calibration Accuracy</string>
 
     <string name="gyroscope_cal">Gyroscope calibration</string>
     <string name="gyroscope_cal_intro" product="tablet">Put the tablet on a table and do not move it. Then press the Start calibration button to do the calibration.</string>

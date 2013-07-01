@@ -63,6 +63,32 @@
     </ScrollView>
 
     <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/result_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="@string/result_text"
+            android:visibility="gone"
+        />
+
+        <ProgressBar
+            android:id="@+id/result_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:progressDrawable="@drawable/compass_progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="0"
+            android:visibility="gone"
+        />
+    </LinearLayout>
+
+    <LinearLayout
         style="@style/CompassPreferenceButtonContainer"
         android:orientation="horizontal">
 

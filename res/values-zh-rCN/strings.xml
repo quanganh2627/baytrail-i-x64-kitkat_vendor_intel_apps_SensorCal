@@ -27,6 +27,7 @@
     <string name="compass_cal_alert_title">"结果"</string>
     <string name="compass_cal_alert_ok_btn">"确定"</string>
     <string name="compass_cal_alert_success">"校准成功!"</string>
+    <string name="result_text">"校准精度"</string>
     <string name="gyroscope_cal">"校准陀螺仪"</string>
     <string name="gyroscope_cal_intro" product="tablet">"把平板电脑放在桌子上，不要移动它。然后按开始校准按钮来进行校准。"</string>
     <string name="gyroscope_cal_intro" product="default">"把手机放在桌子上，不要移动它。然后按开始校准按钮来进行校准。"</string>
