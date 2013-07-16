@@ -22,10 +22,8 @@ public class SensorCalibration {
     static final int PSH_GYRO = 1;
 
     static final int CAL_NONE = 0;
-    static final int CAL_DONE = 0xFF;
-    static final int CAL_VALUE_BEST = 10;
+    static final int CAL_DONE = 100;
     static final int CAL_VALUE_MID = 50;
-    static final int CAL_VALUE_MAX = 250;
 
     static final int MSG_START = 0;
     static final int MSG_GET = 1;

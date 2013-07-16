@@ -296,9 +296,11 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     }
 
     public void onGetCalibrationResult(int result) {
-        result = CalculateAccuracy(result);
+        /* Update mCalResult */
+        if (mCalResult < result)
+                mCalResult = result;
 
-        if (result == resultProgress.getMax()) {
+        if (result == SensorCalibration.CAL_DONE) {
             Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_STOP);
             mThreadHandler.sendMessage(threadMsg);
 
@@ -311,26 +313,8 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
         updateProgress(result);
     }
 
-    public int CalculateAccuracy(int result) {
-        /* Convert result from result vaule to accuracy value */
-        if (result == SensorCalibration.CAL_DONE) {
-            result = resultProgress.getMax();
-        } else {
-            if (result > SensorCalibration.CAL_VALUE_MID)
-                result = SensorCalibration.CAL_VALUE_MID - ((result * SensorCalibration.CAL_VALUE_MID)/SensorCalibration.CAL_VALUE_MAX);
-            else
-                result = SensorCalibration.CAL_VALUE_MID - result + SensorCalibration.CAL_VALUE_MID + SensorCalibration.CAL_VALUE_BEST;
-        }
-
-        /* Update mCalResult */
-        if (mCalResult < result)
-                mCalResult = result;
-
-        return result;
-    }
-
     public void updateProgress(int result) {
-        if (result == resultProgress.getMax()) {
+        if (result == SensorCalibration.CAL_DONE) {
            resultProgress.setProgress(0);
            resultProgress.setSecondaryProgress(resultProgress.getMax());
         } else {
