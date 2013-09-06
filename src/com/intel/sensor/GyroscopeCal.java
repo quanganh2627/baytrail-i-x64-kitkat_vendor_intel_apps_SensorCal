@@ -292,6 +292,7 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
             builder.setPositiveButton(R.string.gyroscope_cal_alert_ok_btn, null);
             builder.setTitle(R.string.gyroscope_cal_alert_title);
             builder.setMessage(success? R.string.gyroscope_cal_alert_success: R.string.gyroscope_cal_alert_fail);
+            builder.setCancelable(false);
             builder.show();
     }
 }

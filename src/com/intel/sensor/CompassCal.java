@@ -288,9 +288,9 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
             setRequestedOrientation(originalOrientation);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setPositiveButton(R.string.compass_cal_alert_ok_btn, null);
-
             builder.setTitle(R.string.compass_cal_alert_title);
             builder.setMessage(R.string.compass_cal_alert_success);
+            builder.setCancelable(false);
             builder.show();
         }
     }
