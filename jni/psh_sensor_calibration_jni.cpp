@@ -47,7 +47,7 @@ JNIEXPORT jint JNICALL psh_calibration_open(JNIEnv *env,
 	if (sensor_type == COMPASS_CAL){
 		LOGI("PSH_S_C: Start compass calibration");
 
-		cal = psh_open_session(SENSOR_CALIBRATION_COMP);
+		cal = psh_open_session_with_name("COMPS");
 		if (cal == NULL) {
 			LOGE("PSH_S_C: Can not connect compass_cal");
 			return 0;
@@ -55,7 +55,7 @@ JNIEXPORT jint JNICALL psh_calibration_open(JNIEnv *env,
 	} else if (sensor_type == GYRO_CAL) {
 		LOGI("PSH_S_C: Start gyro calibration");
 
-		cal = psh_open_session(SENSOR_CALIBRATION_GYRO);
+		cal = psh_open_session_with_name("GYRO");
 		if (cal == NULL) {
 			LOGE("PSH_S_C: Can not connect gyro_cal");
 			return 0;
