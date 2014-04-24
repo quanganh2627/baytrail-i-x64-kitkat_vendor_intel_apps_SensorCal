@@ -12,9 +12,6 @@ LOCAL_SRC_FILES := src/com/intel/sensor/SensorCalSettings.java \
 ifeq ($(ENABLE_SENSOR_HUB),true)
 LOCAL_SRC_FILES += src/com/intel/sensor/psh_cal/SensorCalibration.java
 
-LOCAL_JNI_SHARED_LIBRARIES := libPSHSensorCal_JNI
-
-LOCAL_REQUIRED_MODULES := libPSHSensorCal_JNI
 else
 LOCAL_SRC_FILES += src/com/intel/sensor/cal/SensorCalibration.java
 endif

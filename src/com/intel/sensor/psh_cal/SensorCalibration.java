@@ -20,32 +20,9 @@ import android.util.Log;
 
 public class SensorCalibration {
     static final boolean PSH_SUPPORT = true;
-    static final int PSH_COMP = 0;
-    static final int PSH_GYRO = 1;
 
     static final int CAL_NONE = 0;
     static final int CAL_DONE = 100;
     static final int CAL_VALUE_MID = 50;
 
-    static final int MSG_START = 0;
-    static final int MSG_GET = 1;
-    static final int MSG_SET = 2;
-    static final int MSG_STOP = 3;
-    static final int MSG_CLOSE = 4;
-
-    static {
-        try {
-            System.loadLibrary("PSHSensorCal_JNI");
-        }
-        catch(UnsatisfiedLinkError ule) {
-            Log.e("PSH_S_C:","ERROR, Load PSHSensorCal_JNI failed");
-        }
-    }
-
-    public native int CalibrationOpen(int sensor_type);
-    public native int CalibrationStart(int handle);
-    public native int CalibrationGet(int handle);
-    public native int CalibrationSet(int handle);
-    public native int CalibrationStop(int handle);
-    public native void CalibrationClose(int handle);
 }

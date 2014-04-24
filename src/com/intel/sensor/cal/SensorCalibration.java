@@ -18,23 +18,9 @@ package com.intel.sensor;
 
 public class SensorCalibration {
     static final boolean PSH_SUPPORT = false;
-    static final int PSH_COMP = 0;
-    static final int PSH_GYRO = 1;
 
     static final int CAL_NONE = 0;
     static final int CAL_DONE = 100;
     static final int CAL_VALUE_MID = 50;
 
-    static final int MSG_START = 0;
-    static final int MSG_GET = 1;
-    static final int MSG_SET = 2;
-    static final int MSG_STOP = 3;
-    static final int MSG_CLOSE = 4;
-
-    public int CalibrationOpen(int sensor_type) { return 0; }
-    public int CalibrationStart(int handle) { return 0; }
-    public int CalibrationGet(int handle) { return 0; }
-    public int CalibrationSet(int handle) { return 0; }
-    public int CalibrationStop(int handle) { return 0; }
-    public void CalibrationClose(int handle) {}
 }

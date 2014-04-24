@@ -39,11 +39,10 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
     private Button calButton;
     private SensorManager sensorManager;
     private Sensor gyroSensor;
+    private Sensor calSensor;
     private float data[][];
     private int dataCount;
     private Boolean inCalibration;
-    private Handler mMainHandler, mThreadHandler;
-    private int mCalResult;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -57,23 +56,7 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
 
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
 
-        if (SensorCalibration.PSH_SUPPORT) {
-            mCalResult = SensorCalibration.CAL_NONE;
-            mMainHandler = new Handler() {
-                public void handleMessage(Message msg){
-                    switch (msg.what) {
-                        case SensorCalibration.MSG_GET:
-                            int result = (int)msg.arg1;
-                            if (result != 0)
-                                mCalResult = result;
-                            break;
-                    }
-                }
-            };
-
-            new CalibrationThread().start();
-        }
-        else
+        if (SensorCalibration.PSH_SUPPORT == false)
         {
             data = new float[DATA_COUNT][3];
             dataCount = 0;
@@ -81,76 +64,16 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
         inCalibration = false;
     }
 
-    class CalibrationThread extends Thread {
-        private SensorCalibration gyroCal;
-        private int CalHandle;
-        private boolean NeedExit;
-
-        public void run() {
-            gyroCal = new SensorCalibration();
-            CalHandle = gyroCal.CalibrationOpen(SensorCalibration.PSH_GYRO);
-
-            Looper.prepare();
-
-            mThreadHandler = new Handler() {
-                public void handleMessage(Message msg) {
-                    switch (msg.what) {
-                        case SensorCalibration.MSG_START:
-                            gyroCal.CalibrationStart(CalHandle);
-
-                            NeedExit = false;
-                            new GetCalibrationResult().start();
-
-                            break;
-                        case SensorCalibration.MSG_SET:
-                            gyroCal.CalibrationSet(CalHandle);
-                            break;
-                        case SensorCalibration.MSG_STOP:
-                            NeedExit = true;
-                            gyroCal.CalibrationStop(CalHandle);
-                            break;
-                        case SensorCalibration.MSG_CLOSE:
-                            gyroCal.CalibrationClose(CalHandle);
-                            break;
-                    }
-                }
-            };
-
-            Looper.loop();
-        }
-
-        class GetCalibrationResult extends Thread {
-
-            public void run () {
-                while (!NeedExit) {
-                    int result = gyroCal.CalibrationGet(CalHandle);
-
-                    Message toMain = mMainHandler.obtainMessage(SensorCalibration.MSG_GET, result, 0);
-                    mMainHandler.sendMessage(toMain);
-
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
 
         if (inCalibration) {
-            sensorManager.unregisterListener(this, gyroSensor);
-
             if (SensorCalibration.PSH_SUPPORT) {
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_STOP);
-                mThreadHandler.sendMessage(threadMsg);
-
-                threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_SET);
-                mThreadHandler.sendMessage(threadMsg);
+                sensorManager.unregisterListener(this, calSensor);
+            } else {
+                // SensorCalibration.PSH_SUPPORT == false
+                sensorManager.unregisterListener(this, gyroSensor);
             }
         }
     }
@@ -160,13 +83,12 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
         super.onResume();
 
         if (inCalibration) {
-            sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
-
             if (SensorCalibration.PSH_SUPPORT) {
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_START);
-                mThreadHandler.sendMessage(threadMsg);
+                sensorManager.registerListener(this, calSensor, 10000);
+            } else {
+                // SensorCalibration.PSH_SUPPORT == false
+                sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
             }
-
 	}
     }
 
@@ -176,8 +98,8 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
             calButton.setEnabled(false);
 
             if (SensorCalibration.PSH_SUPPORT) {
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_START);
-                mThreadHandler.sendMessage(threadMsg);
+                calSensor = sensorManager.getDefaultSensor(110);
+                sensorManager.registerListener(this, calSensor, 10000);
             }
             else
             {
@@ -197,11 +119,12 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
             }
 
             inCalibration = true;
-            gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
         }
     }
@@ -209,24 +132,21 @@ public class GyroscopeCal extends Activity implements OnClickListener, SensorEve
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
         case Sensor.TYPE_GYROSCOPE:
+            if (SensorCalibration.PSH_SUPPORT == false)
+                collectData(event);
+            break;
+
+        case 110:
             if (SensorCalibration.PSH_SUPPORT) {
-                if (mCalResult == SensorCalibration.CAL_DONE) {
-                    sensorManager.unregisterListener(this, gyroSensor);
+                if (event.values[0] == SensorCalibration.CAL_DONE) {
+                    sensorManager.unregisterListener(this, calSensor);
+
                     inCalibration = false;
                     calButton.setEnabled(true);
-
-                    Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_STOP);
-                    mThreadHandler.sendMessage(threadMsg);
-
-                    threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_SET);
-                    mThreadHandler.sendMessage(threadMsg);
 
                     showResultDialog(true);
                 }
             }
-            else
-                collectData(event);
-
             break;
         }
     }

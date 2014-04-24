@@ -48,11 +48,11 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
     private ProgressBar resultProgress;
     private SensorManager sensorManager;
     private Sensor compassSensor;
+    private Sensor calSensor;
     private Boolean inCalibration;
     private int delay = SensorManager.SENSOR_DELAY_FASTEST;
     private boolean isTablet = false;
     private int originalOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
-    private Handler mMainHandler, mThreadHandler;
     private int mCalResult;
 
     @Override
@@ -67,80 +67,10 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
 
         if (SensorCalibration.PSH_SUPPORT) {
             mCalResult = SensorCalibration.CAL_NONE;
-            mMainHandler = new Handler() {
-                public void handleMessage(Message msg){
-                    switch (msg.what) {
-                        case SensorCalibration.MSG_GET:
-                            int result = (int)msg.arg1;
-                            if (result != 0)
-                                onGetCalibrationResult(result);
-                            break;
-                    }
-                }
-            };
-
-            new CalibrationThread().start();
         }
 
         delay = SensorManager.SENSOR_DELAY_FASTEST;
         setupLayout();
-    }
-
-    class CalibrationThread extends Thread {
-        private SensorCalibration compassCal;
-        private int CalHandle;
-        private boolean NeedExit;
-
-        public void run() {
-            compassCal = new SensorCalibration();
-            CalHandle = compassCal.CalibrationOpen(SensorCalibration.PSH_COMP);
-
-            Looper.prepare();
-
-            mThreadHandler = new Handler() {
-                public void handleMessage(Message msg) {
-                    switch (msg.what) {
-                        case SensorCalibration.MSG_START:
-                            compassCal.CalibrationStart(CalHandle);
-
-                            NeedExit = false;
-                            new GetCalibrationResult().start();
-
-                            break;
-                        case SensorCalibration.MSG_SET:
-                            compassCal.CalibrationSet(CalHandle);
-                            break;
-                        case SensorCalibration.MSG_STOP:
-                            NeedExit = true;
-                            compassCal.CalibrationStop(CalHandle);
-                            break;
-                        case SensorCalibration.MSG_CLOSE:
-                            compassCal.CalibrationClose(CalHandle);
-                            break;
-                    }
-                }
-            };
-
-            Looper.loop();
-        }
-
-        class GetCalibrationResult extends Thread {
-
-            public void run () {
-                while (!NeedExit) {
-                    int result = compassCal.CalibrationGet(CalHandle);
-
-                    Message toMain = mMainHandler.obtainMessage(SensorCalibration.MSG_GET, result, 0);
-                    mMainHandler.sendMessage(toMain);
-
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
     }
 
     @Override
@@ -173,14 +103,11 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
         super.onPause();
 
         if (inCalibration) {
-            sensorManager.unregisterListener(this, compassSensor);
-
             if (SensorCalibration.PSH_SUPPORT) {
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_STOP);
-                mThreadHandler.sendMessage(threadMsg);
-
-                threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_SET);
-                mThreadHandler.sendMessage(threadMsg);
+                sensorManager.unregisterListener(this, calSensor);
+            } else {
+                // SensorCalibration.PSH_SUPPORT == false
+                sensorManager.unregisterListener(this, compassSensor);
             }
         }
     }
@@ -190,11 +117,11 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
         super.onResume();
 
         if (inCalibration) {
-            sensorManager.registerListener(this, compassSensor, delay);
-
             if (SensorCalibration.PSH_SUPPORT) {
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_START);
-                mThreadHandler.sendMessage(threadMsg);
+                sensorManager.registerListener(this, calSensor, 20000);
+            } else {
+                // SensorCalibration.PSH_SUPPORT == false
+                sensorManager.registerListener(this, compassSensor, delay);
             }
         }
     }
@@ -238,8 +165,8 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
                 mCalResult = SensorCalibration.CAL_NONE;
                 updateProgress(0);
 
-                Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_START);
-                mThreadHandler.sendMessage(threadMsg);
+                calSensor = sensorManager.getDefaultSensor(110);
+                sensorManager.registerListener(this, calSensor, 20000);
             }
             else
             {
@@ -259,17 +186,37 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                compassSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                sensorManager.registerListener(this, compassSensor, delay);
             }
 
             inCalibration = true;
-            compassSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-            sensorManager.registerListener(this, compassSensor, delay);
 
             break;
         }
     }
 
     public void onSensorChanged(SensorEvent event) {
+        switch (event.sensor.getType()) {
+        case 110:
+            if (SensorCalibration.PSH_SUPPORT) {
+                int result = (int)event.values[0];
+
+                if (mCalResult < result)
+                    mCalResult = result;
+
+                if (result == SensorCalibration.CAL_DONE) {
+                    sensorManager.unregisterListener(this, calSensor);
+
+                    onCalibrationFinished();
+                }
+
+                updateProgress(result);
+            }
+            break;
+        }
+
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -293,24 +240,6 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
             builder.setCancelable(false);
             builder.show();
         }
-    }
-
-    public void onGetCalibrationResult(int result) {
-        /* Update mCalResult */
-        if (mCalResult < result)
-                mCalResult = result;
-
-        if (result == SensorCalibration.CAL_DONE) {
-            Message threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_STOP);
-            mThreadHandler.sendMessage(threadMsg);
-
-            threadMsg = mThreadHandler.obtainMessage(SensorCalibration.MSG_SET);
-            mThreadHandler.sendMessage(threadMsg);
-
-            onCalibrationFinished();
-        }
-
-        updateProgress(result);
     }
 
     public void updateProgress(int result) {
