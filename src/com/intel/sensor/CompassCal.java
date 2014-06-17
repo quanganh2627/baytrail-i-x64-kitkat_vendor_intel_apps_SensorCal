@@ -206,23 +206,14 @@ public class CompassCal extends Activity implements OnClickListener, SensorEvent
         originalOrientation = getRequestedOrientation();
 
         if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_90) {
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                // tablet is in reverse portrait mode when rotation is 90, crazy!!!
-                if (isTablet)
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-                else
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            }
+            if (orientation == Configuration.ORIENTATION_PORTRAIT)
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             else if (orientation == Configuration.ORIENTATION_LANDSCAPE)
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
         else if (rotation == Surface.ROTATION_180 || rotation == Surface.ROTATION_270) {
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                if (isTablet)
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                else
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-            }
+            if (orientation == Configuration.ORIENTATION_PORTRAIT)
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
             else if (orientation == Configuration.ORIENTATION_LANDSCAPE)
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
         }
