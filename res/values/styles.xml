@@ -16,14 +16,14 @@
 
 <resources>
 
-    <style name="CompassPreferenceButtonContainer" parent="@android:style/Holo.SegmentedButton">
+    <style name="CompassPreferenceButtonContainer" parent="@android:style/Widget.Material.Light.SegmentedButton">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:weightSum">1</item>
         <item name="android:dividerPadding">8dip</item>
     </style>
 
-    <style name="CompassPreferenceButton" parent="@android:style/Widget.Holo.Button.Borderless">
+    <style name="CompassPreferenceButton" parent="@android:style/Widget.Material.Light.Button.Borderless">
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_weight">1</item>
         <item name="android:layout_height">wrap_content</item>
@@ -31,13 +31,13 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <style name="GyroPreferenceButtonContainer" parent="@android:style/Holo.SegmentedButton">
+    <style name="GyroPreferenceButtonContainer" parent="@android:style/Widget.Material.Light.SegmentedButton">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:weightSum">1</item>
         <item name="android:dividerPadding">8dip</item>
     </style>
-    <style name="GyroPreferenceButton" parent="@android:style/Widget.Holo.Button.Borderless">
+    <style name="GyroPreferenceButton" parent="@android:style/Widget.Material.Light.Button.Borderless">
         <item name="android:layout_width">0dip</item>
         <item name="android:layout_weight">1</item>
         <item name="android:layout_height">wrap_content</item>

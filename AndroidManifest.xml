@@ -10,9 +10,8 @@
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
 
     <application android:label="@string/sensor_cal"
-            android:icon="@mipmap/ic_launcher_settings"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.Holo"
+            android:theme="@android:style/Theme.Material.Settings"
             android:uiOptions="splitActionBarWhenNarrow"
             android:hardwareAccelerated="true">
 
